@@ -1,0 +1,33 @@
+# Chỉ đưa code lên git — dữ liệu, dữ liệu đã xử lý, model và ghi chú nghiên cứu giữ ở máy
+Data/
+Data_after_processing/
+Model/
+Search/
+
+# Dữ liệu / artefact lớn nếu lỡ nằm trong Code/
+*.pcap
+*.pcapng
+*.cap
+*.zip
+*.tar
+*.gz
+*.parquet
+*.csv
+*.joblib
+*.pkl
+*.onnx
+*.npy
+*.npz
+
+# Python / Jupyter
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

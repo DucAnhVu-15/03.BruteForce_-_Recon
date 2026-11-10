@@ -80,16 +80,19 @@ def packet_table(pk):
     tcp_len = _col(pk['tcp_len'], 0)
     dport = np.where(proto == 6, _col(pk['tcp_dport']), np.where(proto == 17, _col(pk['udp_dport']), -1))
     tcp, udp, icmp = proto == 6, proto == 17, proto == 1
-    fv = np.where(tcp, f, -1)
+    # gói TCP không có cờ = mảnh IP không mang header TCP (vd hping3 -d payload lớn): vẫn là TCP nhưng không bật cờ nào
+    # (trước đây cờ NA -> -1 = bật mọi bit -> mỗi mảnh bị đếm thành SYN-ACK + RST + XMAS)
+    hdr = tcp & (f >= 0)
+    fv = np.where(hdr, f, -1)
     return pd.DataFrame({
         # notebook 01 lưu ô trống là '' -> coi như NA để gói ARP lấy IP từ arp_spa/arp_tpa
         'src': _str(pk['ip_src']).fillna(_str(pk['arp_spa'])).to_numpy(object),
         'dst': _str(pk['ip_dst']).fillna(_str(pk['arp_tpa'])).to_numpy(object),
         'ts': pk['ts'].to_numpy(float),
         'len': _col(pk['len'], 0), 'dport': dport,
-        'tcp': tcp, 'syn': tcp & ((fv & 0x12) == 0x02), 'synack': tcp & ((fv & 0x12) == 0x12),
-        'rst': tcp & ((fv & 0x04) > 0), 'fin_only': tcp & ((fv & 0x17) == 0x01), 'null': tcp & (fv == 0),
-        'xmas': tcp & ((fv & 0x29) == 0x29), 'ack_only': tcp & (fv == 0x10) & (tcp_len == 0),
+        'tcp': tcp, 'syn': hdr & ((fv & 0x12) == 0x02), 'synack': hdr & ((fv & 0x12) == 0x12),
+        'rst': hdr & ((fv & 0x04) > 0), 'fin_only': hdr & ((fv & 0x17) == 0x01), 'null': hdr & (fv == 0),
+        'xmas': hdr & ((fv & 0x29) == 0x29), 'ack_only': hdr & (fv == 0x10) & (tcp_len == 0),
         'udp': udp, 'icmp_echo': icmp & (icmp_t == 8), 'icmp_unreach': icmp & (icmp_t == 3),
         'arp_req': arp_op == 1, 'arp_rep': arp_op == 2,
         'attack': (pk['label'] == 'attack').to_numpy(),

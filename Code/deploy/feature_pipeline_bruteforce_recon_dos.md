@@ -9,7 +9,7 @@ mà model nhận vào. Nguồn chuẩn là code:
 Hai bản này **phải giống nhau từng dòng**. Sửa một bên thì phải chép sang bên kia, nếu không đặc trưng lúc chạy
 sẽ lệch với lúc train.
 
-Các con số cụ thể (ngưỡng, số vòng) lấy theo run `20261105_1550`.
+Các con số cụ thể (ngưỡng, số vòng) lấy theo run `20261111_0925`.
 
 ---
 
@@ -19,7 +19,8 @@ Các con số cụ thể (ngưỡng, số vòng) lấy theo run `20261105_1550`.
               ┌──────────── train (một lần, offline) ─────────────┐
  pcap lab ──► 01 gán nhãn gói ─┐
  pcap TII ──► 01c gán nhãn DoS ─┼─► 03b trộn với nền UNSW ─► cửa sổ + 97 đặc trưng ─► 04b train HGB ─► 05 xuất ONNX
- pcap UNSW ─► 02 nền benign ────┘        (+ tăng cường DoS)                            chọn ngưỡng     + deploy_config.json
+ pcap UNSW ─► 02 nền benign ────┤        (+ tăng cường DoS)                            chọn ngưỡng     + deploy_config.json
+ pcap QoS/ZT ─► 01d nền khó ────┘
               └────────────────────────────────────────────────────┘
 
               ┌──────────── inference (router / test_bruteforce.py) ──────────────────────────────┐
@@ -238,7 +239,7 @@ danh sách này khớp nhau trước khi chạy.
 1. **ONNX** (`model.onnx`, input `features`) trả về `probabilities`: 4 cột theo thứ tự
    `['benign', 'recon', 'bruteforce', 'dos']`.
 2. **Điểm báo động**: `score = 1 − p[benign]`.
-3. **Báo động** khi `score ≥ threshold`. Ngưỡng lấy từ `deploy_config.json`; với run `20261105_1550` là 0,8821.
+3. **Báo động** khi `score ≥ threshold`. Ngưỡng lấy từ `deploy_config.json`; với run `20261111_0925` là 0,9314 (run `20261105_1550`: 0,8821).
 4. **Lớp tấn công** = lớp có xác suất lớn nhất trong 3 lớp tấn công (bỏ benign). Vì vậy một cửa sổ có thể bị báo động
    ngay cả khi không lớp tấn công nào vượt 0,5.
 5. **Gộp đợt (episode)**: các cửa sổ báo động của **cùng host** cách nhau ≤ `episode_gap_s = 60` s gộp thành một đợt.
@@ -255,6 +256,7 @@ danh sách này khớp nhau trước khi chạy.
 | `01` | Pcap lab (attacker `192.168.1.236` → mục tiêu `192.168.1.182`): gán nhãn **từng gói** `attack` / `aux` theo luật của từng kỹ thuật recon/SSH |
 | `02` | Nền benign UNSW IoT 2016 (20 ngày): đổi IP/MAC cho khớp mạng lab, chia ngày train/val/test 12/4/4 |
 | `01c` | DoS TII-SSRC-23 (hping3, một máy IP thật): ICMP/SYN/UDP/ACK/FIN/RST flood. Đợt ≥ 100 gói/s, gom thành phiên (= task), chia theo thời gian. Kèm benign TII (video/audio/text) làm nền khó |
+| `01d` | Nền khó thêm (từ v5): pcap app tiêu dùng QoS (tách gói gộp > MTU, gỡ NAT chiều về, đổi dải LAN, chia theo lần bắt) và pcap ZeroTier (split theo thư mục, train có bản tăng cường) |
 | `03b` | Trộn mỗi task tấn công vào một đoạn nền cùng split, cắt cửa sổ, tính đặc trưng, gán nhãn, trọng số |
 | `04b` | Train `HistGradientBoostingClassifier`, chọn số vòng theo val loss, chọn ngưỡng, đánh giá test |
 | `05` | Xuất ONNX và `deploy_config.json`; kiểm tra ONNX khớp sklearn |

@@ -33,7 +33,7 @@ ROOT = Path('/home/ubuntu/sepcung/03.Brute_Force_vs_Recon')
 MODEL_ROOT = ROOT / 'Model' / 'hgb_pkt'
 # Thư mục model (chứa model.onnx + deploy_config.json) dùng để test — sửa ở đây hoặc truyền --run.
 # Nhận tên thư mục trong Model/hgb_pkt (vd '20261105_1007') hoặc đường dẫn đầy đủ; None = dòng cuối runs.csv.
-RUN = '20261105_1550'
+RUN = '20261111_0925'
 # Đối số dùng khi chạy KHÔNG truyền gì (vd bấm Run trong IDE) — sửa pcap/tuỳ chọn ở đây.
 # Mặc định: các task SSH lab thuộc split test, kỳ vọng brute-force.
 DEFAULT_ARGS = [str(ROOT / 'Data/real_data/brute_force/ssh/pcaps'), '--split', 'test', '--expect', 'bruteforce',

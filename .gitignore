@@ -3,6 +3,7 @@ Data/
 Data_after_processing/
 Model/
 Search/
+05.Test_model_IDS/
 
 # Dữ liệu / artefact lớn nếu lỡ nằm trong Code/
 *.pcap
@@ -18,6 +19,7 @@ Search/
 *.onnx
 *.npy
 *.npz
+*.txt
 
 # Python / Jupyter
 __pycache__/

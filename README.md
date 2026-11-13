@@ -39,6 +39,7 @@ Code/
 │   ├── 01_attack_packet_labeling.ipynb    # kiểm kê task, tách gói bằng tshark, gán nhãn từng gói
 │   ├── 02_benign_unsw_packets.ipynb       # tách gói UNSW, đổi IP/MAC, chia ngày train/val/test
 │   ├── 01c_dos_tii_packet_labeling.ipynb  # DoS TII-SSRC-23: đợt -> phiên (task), gán nhãn, chia theo thời gian; benign TII
+│   ├── 01d_benign_extra.ipynb             # nền khó thêm: QoS app tiêu dùng (tách gói gộp, gỡ NAT) + ZeroTier (tăng cường)
 │   ├── 03_mix_and_window_features.ipynb   # (v1) trộn + cửa sổ thời gian 10/60/300 s
 │   └── 03b_mix_and_packet_windows.ipynb   # (v2) trộn + cửa sổ lai 50 gói / 10 s + ngữ cảnh 60/300 s
 ├── train/
@@ -58,7 +59,9 @@ Thư mục được tạo khi chạy, không có trong repo:
 | `Data/real_data/` | pcap tấn công lab (`brute_force/ssh`, `recon/*`) |
 | `Data/public/unsw_iot2016/pcap/` | nền benign UNSW IoT 2016 |
 | TII-SSRC-23 `pcap/{malicious/dos,benign}` | DoS và benign TII (đường dẫn `TII` trong 01c) |
-| `Data_after_processing/` | bảng gói `.parquet` (`attack_packets/`, `benign_packets/`, `benign_tii/`), cửa sổ `windows_pkt/{train,val,test}`, báo cáo `reports/` |
+| `Data/pcap_data_QoS/` | pcap app tiêu dùng `<nhóm>_<app>_<lần>_<thiết bị>.pcap` (nền khó QoS, 01d) |
+| `Data/pcap_zerotier/{train,val,test}/` | pcap ZeroTier tự bắt trên router; thư mục quyết định split (01d) |
+| `Data_after_processing/` | bảng gói `.parquet` (`attack_packets/`, `benign_packets/`, `benign_tii/`, `benign_qos/`, `benign_zt/`), cửa sổ `windows_pkt/{train,val,test}`, báo cáo `reports/` |
 | `Model/hgb_pkt/<YYYYMMDD_HHMM>/` | `model.joblib`, `model.onnx`, `deploy_config.json`, chỉ số và biểu đồ; `runs.csv` ghi lịch sử các lần train |
 
 ## Cài đặt
@@ -70,7 +73,8 @@ Thư mục được tạo khi chạy, không có trong repo:
 
 ## Chạy
 
-1. Chạy lần lượt các notebook `01` → `02` → `01c` → `03b` → `04b`.
+1. Chạy lần lượt các notebook `01` → `02` → `01c` → `01d` → `03b` → `04b`
+   (`01d` không bắt buộc: chưa chạy thì 03b chỉ dùng nền khó TII).
    Notebook `04b` ghi kết quả vào `Model/hgb_pkt/<run>/` và thêm một dòng vào `runs.csv`.
 2. Xuất ONNX:
    chạy notebook `Code/deploy/05_export_onnx.ipynb` (biến `RUN = None` lấy run mới nhất trong `runs.csv`,
@@ -130,3 +134,6 @@ Thử trên dữ liệu public không dùng khi train:
   gây báo động giả `bruteforce`.
 - Một số loại chưa có hoặc có ít dữ liệu train, nên phát hiện còn yếu: quét XMAS,
   OS fingerprinting, brute-force qua giao thức không phải TCP (DNS).
+- ZeroTier (hole punching) bị báo `recon`: cần pcap ZeroTier để train (code đã có ở `01d`); v5b thử thêm ZeroTier mô phỏng.
+  Gọi video, stream, tải file lớn từng bị báo `dos`; run `20261111_0925` (thêm nền QoS) đã hết báo nhầm trên QoS test.
+  Chi tiết: [update_benign_qos_zerotier.md](update_benign_qos_zerotier.md).
